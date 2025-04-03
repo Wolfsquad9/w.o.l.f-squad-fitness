@@ -9,7 +9,7 @@ import {
   Clock,
   Flame,
   User,
-  TShirt,
+  Shirt,
 } from "lucide-react";
 
 type ActivityItem = {
@@ -107,7 +107,7 @@ export default function LiveActivityFeed() {
                       </Badge>
                       {activity.data.apparelName && (
                         <span className="flex items-center text-xs gap-1 mt-1">
-                          <TShirt className="h-3 w-3" />
+                          <Shirt className="h-3 w-3" />
                           Using {activity.data.apparelName}
                         </span>
                       )}
