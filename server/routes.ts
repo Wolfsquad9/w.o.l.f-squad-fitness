@@ -9,6 +9,7 @@ import {
   insertApparelSchema, 
   updatePrivacySettingsSchema 
 } from "@shared/schema";
+import { WebSocketServer, WebSocket } from "ws";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -154,6 +155,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(apparel);
   });
   
+  // Apparel usage stats endpoint
+  app.get("/api/apparel/:id/stats", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const id = parseInt(req.params.id);
+    const apparel = await storage.getApparelById(id);
+    
+    if (!apparel) {
+      return res.status(404).send("Apparel not found");
+    }
+    
+    if (apparel.userId !== req.user!.id) {
+      return res.status(403).send("Forbidden");
+    }
+    
+    try {
+      const stats = await storage.getApparelUsageStats(id);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).send("Error retrieving apparel stats");
+    }
+  });
+  
+  // Apparel workouts endpoint
+  app.get("/api/apparel/:id/workouts", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const id = parseInt(req.params.id);
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const apparel = await storage.getApparelById(id);
+    
+    if (!apparel) {
+      return res.status(404).send("Apparel not found");
+    }
+    
+    if (apparel.userId !== req.user!.id) {
+      return res.status(403).send("Forbidden");
+    }
+    
+    try {
+      const workouts = await storage.getApparelWorkouts(id, limit);
+      res.json(workouts);
+    } catch (error) {
+      res.status(500).send("Error retrieving apparel workouts");
+    }
+  });
+  
+  // Most used apparel endpoint
+  app.get("/api/apparel/insights/most-used", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const userId = req.user!.id;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+    
+    try {
+      const apparel = await storage.getMostUsedApparel(userId, limit);
+      res.json(apparel);
+    } catch (error) {
+      res.status(500).send("Error retrieving most used apparel");
+    }
+  });
+  
+  // Best performing apparel endpoint
+  app.get("/api/apparel/insights/best-performing", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const userId = req.user!.id;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+    
+    try {
+      const apparel = await storage.getBestPerformingApparel(userId, limit);
+      res.json(apparel);
+    } catch (error) {
+      res.status(500).send("Error retrieving best performing apparel");
+    }
+  });
+  
   // QR code related endpoints
   app.post("/api/scan", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
@@ -176,8 +254,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if it's a user QR code
-      const users = Array.from((storage as any).users.values());
-      const user = users.find(u => u.qrCode === qrCode);
+      const users = await storage.getAllUsers();
+      const user = users.find(user => user.qrCode === qrCode);
       
       if (user) {
         const { password, ...userWithoutPassword } = user;
@@ -290,5 +368,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store connected clients
+  const clients = new Map<string, WebSocket>();
+  
+  wss.on('connection', (ws, req) => {
+    console.log('WebSocket client connected');
+    
+    // Generate client ID
+    const clientId = Math.random().toString(36).substring(2, 15);
+    clients.set(clientId, ws);
+    
+    // Send initial connection confirmation
+    ws.send(JSON.stringify({
+      type: 'connection',
+      status: 'connected',
+      clientId
+    }));
+    
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle different message types
+        if (data.type === 'workout_update') {
+          // Broadcast workout updates to other clients
+          clients.forEach((client, id) => {
+            if (id !== clientId && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'workout_update',
+                data: data.data
+              }));
+            }
+          });
+        } else if (data.type === 'achievement_unlocked') {
+          // Broadcast achievement notifications to other clients
+          clients.forEach((client, id) => {
+            if (id !== clientId && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'achievement_notification',
+                data: data.data
+              }));
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    // Handle client disconnect
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      clients.delete(clientId);
+    });
+  });
+  
   return httpServer;
 }

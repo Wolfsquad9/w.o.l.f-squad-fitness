@@ -9,6 +9,8 @@ import RecentScans from "@/components/dashboard/recent-scans";
 import QRCodeDisplay from "@/components/dashboard/qr-code-display";
 import AchievementsList from "@/components/dashboard/achievements-list";
 import PackLeaderboard from "@/components/dashboard/pack-leaderboard";
+import ApparelInsights from "@/components/dashboard/apparel-insights";
+import LiveActivityFeed from "@/components/dashboard/live-activity-feed";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function DashboardPage() {
@@ -59,6 +61,11 @@ export default function DashboardPage() {
                 
                 {/* Recent scans/workouts */}
                 <RecentScans workouts={workouts} isLoading={workoutsLoading} />
+                
+                {/* Smart apparel insights */}
+                <div className="mt-6">
+                  <ApparelInsights />
+                </div>
               </div>
             </div>
           </div>
@@ -68,11 +75,20 @@ export default function DashboardPage() {
             {/* QR Code section */}
             <QRCodeDisplay userId={user?.id} />
             
+            {/* Live Activity Feed */}
+            <div className="mt-4">
+              <LiveActivityFeed />
+            </div>
+            
             {/* Achievements section */}
-            <AchievementsList />
+            <div className="mt-4">
+              <AchievementsList />
+            </div>
             
             {/* Pack leaderboard */}
-            <PackLeaderboard currentUserId={user?.id} />
+            <div className="mt-4">
+              <PackLeaderboard currentUserId={user?.id} />
+            </div>
           </div>
         </div>
       </main>

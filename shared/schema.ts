@@ -31,6 +31,12 @@ export const apparel = pgTable("apparel", {
   type: text("type").notNull(),
   qrCode: text("qr_code").notNull().unique(),
   dateAdded: timestamp("date_added").defaultNow(),
+  usageCount: integer("usage_count").default(0),
+  lastUsed: timestamp("last_used"),
+  totalWorkoutDuration: integer("total_workout_duration").default(0), // in minutes
+  totalCaloriesBurned: integer("total_calories_burned").default(0),
+  averageWorkoutDuration: integer("average_workout_duration").default(0), // in minutes
+  performanceRating: integer("performance_rating").default(0), // 0-100 scale
 });
 
 export const workouts = pgTable("workouts", {

@@ -16,6 +16,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUserQRCode(userId: number, qrCode: string): Promise<User | undefined>;
   updateUserPoints(userId: number, points: number): Promise<User | undefined>;
@@ -27,6 +28,18 @@ export interface IStorage {
   getApparelByUserId(userId: number): Promise<Apparel[]>;
   getApparelById(id: number): Promise<Apparel | undefined>;
   getApparelByQrCode(qrCode: string): Promise<Apparel | undefined>;
+  updateApparelUsage(apparelId: number, workoutDuration: number, caloriesBurned: number): Promise<Apparel>;
+  getApparelUsageStats(apparelId: number): Promise<{
+    totalWorkouts: number;
+    totalDuration: number;
+    totalCalories: number;
+    averageDuration: number;
+    lastUsed: Date | null;
+    performanceRating: number;
+  }>;
+  getMostUsedApparel(userId: number, limit?: number): Promise<Apparel[]>;
+  getBestPerformingApparel(userId: number, limit?: number): Promise<Apparel[]>;
+  getApparelWorkouts(apparelId: number, limit?: number): Promise<Workout[]>;
   
   // Workout operations
   createWorkout(workout: InsertWorkout & { userId: number, apparelId?: number }): Promise<Workout>;
@@ -54,7 +67,7 @@ export interface IStorage {
   getLeaderboard(limit?: number): Promise<User[]>;
   
   // Session storage
-  sessionStore: session.SessionStore;
+  sessionStore: ReturnType<typeof createMemoryStore>;
 }
 
 export class MemStorage implements IStorage {
@@ -67,7 +80,7 @@ export class MemStorage implements IStorage {
   private userChallenges: Map<number, UserChallenge>;
   private integratedApps: Map<number, IntegratedApp>;
   
-  public sessionStore: session.SessionStore;
+  public sessionStore: ReturnType<typeof createMemoryStore>;
   
   private currentUserId: number;
   private currentApparelId: number;
@@ -117,6 +130,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(
       (user) => user.username === username,
     );
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
   }
   
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -199,11 +216,99 @@ export class MemStorage implements IStorage {
       name: apparelData.name,
       type: apparelData.type,
       qrCode,
-      dateAdded: date
+      dateAdded: date,
+      usageCount: 0,
+      lastUsed: null,
+      totalWorkoutDuration: 0,
+      totalCaloriesBurned: 0,
+      averageWorkoutDuration: 0,
+      performanceRating: 0
     };
     
     this.apparel.set(id, apparel);
     return apparel;
+  }
+  
+  async updateApparelUsage(apparelId: number, workoutDuration: number, caloriesBurned: number): Promise<Apparel> {
+    const apparel = await this.getApparelById(apparelId);
+    if (!apparel) {
+      throw new Error(`Apparel not found with ID: ${apparelId}`);
+    }
+    
+    const now = new Date();
+    const newUsageCount = (apparel.usageCount || 0) + 1;
+    const newTotalDuration = (apparel.totalWorkoutDuration || 0) + workoutDuration;
+    const newTotalCalories = (apparel.totalCaloriesBurned || 0) + caloriesBurned;
+    const newAverageDuration = Math.round(newTotalDuration / newUsageCount);
+    
+    // Calculate a performance rating (0-100) based on duration and calories
+    const durationFactor = Math.min(workoutDuration / 60, 1); // Cap at 1 hour
+    const caloriesFactor = Math.min(caloriesBurned / 500, 1); // Cap at 500 calories
+    const currentPerformance = Math.round((durationFactor * 0.5 + caloriesFactor * 0.5) * 100);
+    
+    // Blend with existing rating for smoother changes (70% old, 30% new)
+    const oldRating = apparel.performanceRating || 0;
+    const newRating = Math.round(oldRating * 0.7 + currentPerformance * 0.3);
+    
+    const updatedApparel: Apparel = {
+      ...apparel,
+      usageCount: newUsageCount,
+      lastUsed: now,
+      totalWorkoutDuration: newTotalDuration,
+      totalCaloriesBurned: newTotalCalories,
+      averageWorkoutDuration: newAverageDuration,
+      performanceRating: newRating
+    };
+    
+    this.apparel.set(apparelId, updatedApparel);
+    return updatedApparel;
+  }
+  
+  async getApparelUsageStats(apparelId: number): Promise<{
+    totalWorkouts: number;
+    totalDuration: number;
+    totalCalories: number;
+    averageDuration: number;
+    lastUsed: Date | null;
+    performanceRating: number;
+  }> {
+    const apparel = await this.getApparelById(apparelId);
+    if (!apparel) {
+      throw new Error(`Apparel not found with ID: ${apparelId}`);
+    }
+    
+    return {
+      totalWorkouts: apparel.usageCount || 0,
+      totalDuration: apparel.totalWorkoutDuration || 0,
+      totalCalories: apparel.totalCaloriesBurned || 0,
+      averageDuration: apparel.averageWorkoutDuration || 0,
+      lastUsed: apparel.lastUsed || null,
+      performanceRating: apparel.performanceRating || 0
+    };
+  }
+  
+  async getMostUsedApparel(userId: number, limit: number = 5): Promise<Apparel[]> {
+    const userApparel = await this.getApparelByUserId(userId);
+    
+    return userApparel
+      .sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0))
+      .slice(0, limit);
+  }
+  
+  async getBestPerformingApparel(userId: number, limit: number = 5): Promise<Apparel[]> {
+    const userApparel = await this.getApparelByUserId(userId);
+    
+    return userApparel
+      .sort((a, b) => (b.performanceRating || 0) - (a.performanceRating || 0))
+      .slice(0, limit);
+  }
+  
+  async getApparelWorkouts(apparelId: number, limit?: number): Promise<Workout[]> {
+    const apparelWorkouts = Array.from(this.workouts.values())
+      .filter(workout => workout.apparelId === apparelId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    return limit ? apparelWorkouts.slice(0, limit) : apparelWorkouts;
   }
   
   async getApparelByUserId(userId: number): Promise<Apparel[]> {
@@ -243,6 +348,15 @@ export class MemStorage implements IStorage {
     
     // Update user points
     await this.updateUserPoints(workoutData.userId, workout.duration / 5);
+    
+    // Update apparel usage statistics if apparel was used
+    if (workoutData.apparelId) {
+      await this.updateApparelUsage(
+        workoutData.apparelId, 
+        workoutData.duration, 
+        workoutData.calories || 0
+      );
+    }
     
     // Check for achievements
     await this.checkWorkoutAchievements(workoutData.userId);
