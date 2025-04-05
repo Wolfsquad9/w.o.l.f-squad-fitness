@@ -119,6 +119,43 @@ export class MemStorage implements IStorage {
     
     // Initialize with default challenges
     this.initializeChallenges();
+    
+    // Create a test user for development
+    this.createTestUser();
+  }
+  
+  // Create a test user with a known password for development
+  private async createTestUser() {
+    // Import password hashing functions from auth.ts
+    const { hashPassword } = await import('./auth');
+    
+    // Only create test user if no users exist
+    if (this.users.size === 0) {
+      // Hash the password "password123"
+      const password = "password123";
+      const hashedPassword = await hashPassword(password);
+      
+      const testUser: User = {
+        id: this.currentUserId++,
+        username: "testuser",
+        password: hashedPassword,
+        email: "testuser@wolf.com",
+        fullName: "Test User",
+        level: 1,
+        points: 0,
+        role: "member",
+        qrCode: "test-qr-code",
+        profilePicture: undefined,
+        privacySettings: {
+          shareWorkouts: true,
+          shareAchievements: true,
+          showInLeaderboard: true
+        }
+      };
+      
+      this.users.set(testUser.id, testUser);
+      console.log("Created test user with username: testuser and password: password123");
+    }
   }
   
   // User methods
