@@ -18,6 +18,7 @@ import ApparelDetailPage from "@/pages/apparel-detail-page";
 import WorkoutTrackerPage from "@/pages/workout-tracker-page";
 import LandingPage from "@/pages/landing-page";
 import DemoPage from "@/pages/demo-page";
+import FitnessAppPage from "@/pages/fitness-app-page";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
       <ProtectedRoute path="/workout" component={WorkoutTrackerPage} />
       <ProtectedRoute path="/apparel/:id" component={ApparelDetailPage} />
       <ProtectedRoute path="/demo" component={DemoPage} />
+      <ProtectedRoute path="/fitness" component={FitnessAppPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

@@ -47,6 +47,11 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-foreground">Your Dashboard</h2>
                   <div className="flex items-center gap-3">
+                    <Link href="/fitness">
+                      <Button variant="default" size="sm" className="flex items-center gap-1">
+                        Fitness App
+                      </Button>
+                    </Link>
                     <Link href="/demo">
                       <Button variant="outline" size="sm" className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>

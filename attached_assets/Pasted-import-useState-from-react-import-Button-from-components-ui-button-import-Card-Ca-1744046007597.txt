@@ -1,0 +1,82 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
+export default function Home() {
+  const [page, setPage] = useState("home");
+
+  return (
+    <div className="min-h-screen bg-background text-foreground p-4">
+      <nav className="flex justify-around mb-4">
+        <Button onClick={() => setPage("home")}>Accueil</Button>
+        <Button onClick={() => setPage("training")}>Entraînements</Button>
+        <Button onClick={() => setPage("nutrition")}>Nutrition</Button>
+        <Button onClick={() => setPage("shop")}>Boutique</Button>
+        <Button onClick={() => setPage("profile")}>Profil</Button>
+      </nav>
+
+      <main>
+        {page === "home" && <HomePage />}
+        {page === "training" && <TrainingPage />}
+        {page === "nutrition" && <NutritionPage />}
+        {page === "shop" && <ShopPage />}
+        {page === "profile" && <ProfilePage />}
+      </main>
+    </div>
+  );
+}
+
+function HomePage() {
+  return (
+    <Card>
+      <CardContent>
+        <h1 className="text-xl font-bold mb-2">Bienvenue !</h1>
+        <p>Choisissez une section pour commencer votre parcours santé.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TrainingPage() {
+  return (
+    <Card>
+      <CardContent>
+        <h2 className="text-lg font-semibold mb-2">Vos entraînements</h2>
+        <p>Programmes personnalisés à venir...</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NutritionPage() {
+  return (
+    <Card>
+      <CardContent>
+        <h2 className="text-lg font-semibold mb-2">Suivi nutritionnel</h2>
+        <p>Journal alimentaire et macros à venir...</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ShopPage() {
+  return (
+    <Card>
+      <CardContent>
+        <h2 className="text-lg font-semibold mb-2">Boutique</h2>
+        <p>Explorez les produits Adidas, Nike, etc.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProfilePage() {
+  return (
+    <Card>
+      <CardContent>
+        <h2 className="text-lg font-semibold mb-2">Profil utilisateur</h2>
+        <p>Personnalisez vos objectifs et vos préférences.</p>
+      </CardContent>
+    </Card>
+  );
+}
