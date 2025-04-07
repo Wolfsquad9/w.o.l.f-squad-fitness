@@ -99,222 +99,238 @@ export default function AuthPage() {
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       {/* Left column - Form */}
       <div className="md:w-1/2 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md glass-card">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="bg-primary/10 p-4 rounded-full">
-                <svg className="w-10 h-10 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" 
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+        <div className="w-full max-w-md relative">
+          {/* Glowing background effect */}
+          <div 
+            className="absolute -top-10 -left-10 w-48 h-48 rounded-full bg-accent/20 blur-3xl"
+            style={{ animation: "pulse 8s infinite alternate" }} 
+          />
+          <div 
+            className="absolute -bottom-5 -right-5 w-36 h-36 rounded-full bg-primary/20 blur-3xl" 
+            style={{ animation: "pulse 6s infinite alternate-reverse" }}
+          />
+          
+          <Card className="w-full max-w-md frost-glass relative overflow-hidden backdrop-blur-xl">
+            {/* Diagonal athletic design element */}
+            <div className="absolute -top-32 -right-32 w-64 h-64 bg-accent/5 rounded-full"></div>
+            <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-primary/5 rounded-full"></div>
+            
+            <CardHeader className="text-center relative z-10">
+              <div className="flex justify-center mb-4">
+                <div className="bg-primary/10 p-4 rounded-full glow-hover">
+                  <svg className="w-10 h-10 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" 
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
               </div>
-            </div>
-            <CardTitle className="text-2xl font-montserrat text-primary">W.O.L.F SQUAD</CardTitle>
-            <CardDescription className="text-slate-500">
-              Join the pack. Elevate your fitness journey.
-            </CardDescription>
-          </CardHeader>
+              <CardTitle className="text-2xl font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">W.O.L.F SQUAD</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Join the pack. Elevate your fitness journey.
+              </CardDescription>
+            </CardHeader>
 
-          <CardContent>
-            <Tabs 
-              value={activeTab} 
-              onValueChange={(v) => {
-                setActiveTab(v as "login" | "register");
-                // Reset states when changing tabs
-                if (v === "login") {
-                  setLoginState("idle");
-                  registerForm.reset();
-                } else {
-                  setRegisterState("idle");
-                  loginForm.reset();
-                }
-              }}
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 p-1 rounded-full">
-                <TabsTrigger value="login" className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm">Login</TabsTrigger>
-                <TabsTrigger value="register" className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm">Register</TabsTrigger>
-              </TabsList>
+            <CardContent className="relative z-10">
+              <Tabs 
+                value={activeTab} 
+                onValueChange={(v) => {
+                  setActiveTab(v as "login" | "register");
+                  // Reset states when changing tabs
+                  if (v === "login") {
+                    setLoginState("idle");
+                    registerForm.reset();
+                  } else {
+                    setRegisterState("idle");
+                    loginForm.reset();
+                  }
+                }}
+              >
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 backdrop-blur-sm p-1 rounded-full">
+                  <TabsTrigger value="login" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md">Login</TabsTrigger>
+                  <TabsTrigger value="register" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md">Register</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="login">
-                <LoginStateVisualizer 
-                  state={loginState} 
-                  errorMessage={loginMutation.error?.message}
-                  className="mb-6"
-                />
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                    <FormField
-                      control={loginForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-600 font-medium">Username</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter your username" 
-                              className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
-                              {...field} 
-                              disabled={loginState === "loading" || loginState === "success"}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
+                <TabsContent value="login">
+                  <LoginStateVisualizer 
+                    state={loginState} 
+                    errorMessage={loginMutation.error?.message}
+                    className="mb-6"
+                  />
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                      <FormField
+                        control={loginForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-medium">Username</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your username" 
+                                className="rounded-xl border-border/30 bg-input/50 backdrop-blur-sm focus:bg-input/80 focus-visible:ring-primary/40 py-5 text-foreground placeholder:text-muted-foreground"
+                                {...field} 
+                                disabled={loginState === "loading" || loginState === "success"}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-destructive" />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-600 font-medium">Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="Enter your password" 
-                              className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
-                              {...field} 
-                              disabled={loginState === "loading" || loginState === "success"}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-medium">Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Enter your password" 
+                                className="rounded-xl border-border/30 bg-input/50 backdrop-blur-sm focus:bg-input/80 focus-visible:ring-primary/40 py-5 text-foreground placeholder:text-muted-foreground"
+                                {...field} 
+                                disabled={loginState === "loading" || loginState === "success"}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-destructive" />
+                          </FormItem>
+                        )}
+                      />
 
-                    <Button
-                      type="submit"
-                      className="w-full mt-6 rounded-xl py-6 bg-primary hover:bg-primary/90 transition-all shadow-md hover:shadow-lg"
-                      disabled={loginMutation.isPending || loginState === "success"}
-                    >
-                      {loginMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...
-                        </>
-                      ) : (
-                        "Log in"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
+                      <Button
+                        type="submit"
+                        className="w-full mt-6 rounded-xl py-6 btn-glow text-white shadow-lg hover:shadow-primary/20 hover:translate-y-[-2px] transition-all duration-300"
+                        disabled={loginMutation.isPending || loginState === "success"}
+                      >
+                        {loginMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...
+                          </>
+                        ) : (
+                          "Log in"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
 
-              <TabsContent value="register">
-                <LoginStateVisualizer 
-                  state={registerState} 
-                  errorMessage={registerMutation.error?.message}
-                  className="mb-6"
-                />
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                    <FormField
-                      control={registerForm.control}
-                      name="fullName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-600 font-medium">Full Name</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter your full name" 
-                              className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
-                              {...field} 
-                              disabled={registerState === "loading" || registerState === "success"}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
+                <TabsContent value="register">
+                  <LoginStateVisualizer 
+                    state={registerState} 
+                    errorMessage={registerMutation.error?.message}
+                    className="mb-6"
+                  />
+                  <Form {...registerForm}>
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="fullName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-medium">Full Name</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your full name" 
+                                className="rounded-xl border-border/30 bg-input/50 backdrop-blur-sm focus:bg-input/80 focus-visible:ring-primary/40 py-5 text-foreground placeholder:text-muted-foreground"
+                                {...field} 
+                                disabled={registerState === "loading" || registerState === "success"}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-destructive" />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-600 font-medium">Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="email" 
-                              placeholder="Enter your email" 
-                              className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
-                              {...field} 
-                              disabled={registerState === "loading" || registerState === "success"}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-medium">Email</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                className="rounded-xl border-border/30 bg-input/50 backdrop-blur-sm focus:bg-input/80 focus-visible:ring-primary/40 py-5 text-foreground placeholder:text-muted-foreground"
+                                {...field} 
+                                disabled={registerState === "loading" || registerState === "success"}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-destructive" />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={registerForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-600 font-medium">Username</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Choose a username" 
-                              className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
-                              {...field} 
-                              disabled={registerState === "loading" || registerState === "success"}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={registerForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-medium">Username</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Choose a username" 
+                                className="rounded-xl border-border/30 bg-input/50 backdrop-blur-sm focus:bg-input/80 focus-visible:ring-primary/40 py-5 text-foreground placeholder:text-muted-foreground"
+                                {...field} 
+                                disabled={registerState === "loading" || registerState === "success"}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-destructive" />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-600 font-medium">Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="Create a password (min. 8 characters)" 
-                              className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
-                              {...field} 
-                              disabled={registerState === "loading" || registerState === "success"}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-500" />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-medium">Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Create a password (min. 8 characters)" 
+                                className="rounded-xl border-border/30 bg-input/50 backdrop-blur-sm focus:bg-input/80 focus-visible:ring-primary/40 py-5 text-foreground placeholder:text-muted-foreground"
+                                {...field} 
+                                disabled={registerState === "loading" || registerState === "success"}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-destructive" />
+                          </FormItem>
+                        )}
+                      />
 
-                    <Button
-                      type="submit"
-                      className="w-full mt-6 rounded-xl py-6 bg-primary hover:bg-primary/90 transition-all shadow-md hover:shadow-lg"
-                      disabled={registerMutation.isPending || registerState === "success"}
-                    >
-                      {registerMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account...
-                        </>
-                      ) : (
-                        "Create Account"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
+                      <Button
+                        type="submit"
+                        className="w-full mt-6 rounded-xl py-6 btn-glow text-white shadow-lg hover:shadow-primary/20 hover:translate-y-[-2px] transition-all duration-300"
+                        disabled={registerMutation.isPending || registerState === "success"}
+                      >
+                        {registerMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account...
+                          </>
+                        ) : (
+                          "Create Account"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
 
-          <CardFooter className="flex flex-col items-center justify-center pt-4 border-t border-slate-100">
-            <p className="text-sm text-slate-500">By continuing, you agree to our <span className="text-primary hover:underline cursor-pointer">Terms of Service</span> and <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>.</p>
-          </CardFooter>
-        </Card>
+            <CardFooter className="flex flex-col items-center justify-center pt-4 border-t border-white/5">
+              <p className="text-sm text-muted-foreground">By continuing, you agree to our <span className="text-primary hover:text-accent hover:underline cursor-pointer transition-colors">Terms of Service</span> and <span className="text-primary hover:text-accent hover:underline cursor-pointer transition-colors">Privacy Policy</span>.</p>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
 
       {/* Right column - Hero */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary to-primary-foreground/80 text-white p-12 flex-col justify-center">
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary/90 to-accent/80 text-white p-12 flex-col justify-center diagonal-divider">
         <div className="max-w-lg mx-auto">
           <div className="mb-10">
-            <h1 className="text-5xl font-bold mb-8 tracking-tight">Elevate Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">Fitness Journey</span></h1>
+            <h1 className="text-5xl font-bold mb-8 tracking-tight">Elevate Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70">Fitness Journey</span></h1>
             <p className="text-xl mb-10 font-light leading-relaxed">W.O.L.F Squad integrates cutting-edge QR technology into premium fitness apparel, letting you track your progress seamlessly across every workout.</p>
           </div>
           
@@ -356,7 +372,7 @@ export default function AuthPage() {
             </div>
           </div>
           
-          <div className="mt-14 py-6 px-8 rounded-2xl bg-white/10 backdrop-blur-sm">
+          <div className="mt-14 py-6 px-8 rounded-2xl bg-white/10 backdrop-blur-sm frost-glass">
             <p className="text-xl quote text-white/90 leading-relaxed">
               "The strength of the pack is the wolf, and the strength of the wolf is the pack."
             </p>
