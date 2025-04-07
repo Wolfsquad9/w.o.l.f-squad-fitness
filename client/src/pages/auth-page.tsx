@@ -25,11 +25,16 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import LoginStateVisualizer from "@/components/auth/login-state-visualizer";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const { user, loginMutation, registerMutation } = useAuth();
   const [, navigate] = useLocation();
+  
+  // Add login and register state management
+  const [loginState, setLoginState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [registerState, setRegisterState] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -37,6 +42,28 @@ export default function AuthPage() {
       navigate("/");
     }
   }, [user, navigate]);
+  
+  // Monitor login mutation status
+  useEffect(() => {
+    if (loginMutation.isPending) {
+      setLoginState("loading");
+    } else if (loginMutation.isError) {
+      setLoginState("error");
+    } else if (loginMutation.isSuccess) {
+      setLoginState("success");
+    }
+  }, [loginMutation.isPending, loginMutation.isError, loginMutation.isSuccess]);
+  
+  // Monitor register mutation status
+  useEffect(() => {
+    if (registerMutation.isPending) {
+      setRegisterState("loading");
+    } else if (registerMutation.isError) {
+      setRegisterState("error");
+    } else if (registerMutation.isSuccess) {
+      setRegisterState("success");
+    }
+  }, [registerMutation.isPending, registerMutation.isError, registerMutation.isSuccess]);
 
   // Login form
   const loginForm = useForm<LoginData>({
@@ -59,10 +86,12 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = (data: LoginData) => {
+    setLoginState("loading");
     loginMutation.mutate(data);
   };
 
   const onRegisterSubmit = (data: InsertUser) => {
+    setRegisterState("loading");
     registerMutation.mutate(data);
   };
 
@@ -87,13 +116,31 @@ export default function AuthPage() {
           </CardHeader>
 
           <CardContent>
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "register")}>
+            <Tabs 
+              value={activeTab} 
+              onValueChange={(v) => {
+                setActiveTab(v as "login" | "register");
+                // Reset states when changing tabs
+                if (v === "login") {
+                  setLoginState("idle");
+                  registerForm.reset();
+                } else {
+                  setRegisterState("idle");
+                  loginForm.reset();
+                }
+              }}
+            >
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 p-1 rounded-full">
                 <TabsTrigger value="login" className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm">Login</TabsTrigger>
                 <TabsTrigger value="register" className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm">Register</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
+                <LoginStateVisualizer 
+                  state={loginState} 
+                  errorMessage={loginMutation.error?.message}
+                  className="mb-6"
+                />
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                     <FormField
@@ -107,6 +154,7 @@ export default function AuthPage() {
                               placeholder="Enter your username" 
                               className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
                               {...field} 
+                              disabled={loginState === "loading" || loginState === "success"}
                             />
                           </FormControl>
                           <FormMessage className="text-red-500" />
@@ -126,6 +174,7 @@ export default function AuthPage() {
                               placeholder="Enter your password" 
                               className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
                               {...field} 
+                              disabled={loginState === "loading" || loginState === "success"}
                             />
                           </FormControl>
                           <FormMessage className="text-red-500" />
@@ -136,7 +185,7 @@ export default function AuthPage() {
                     <Button
                       type="submit"
                       className="w-full mt-6 rounded-xl py-6 bg-primary hover:bg-primary/90 transition-all shadow-md hover:shadow-lg"
-                      disabled={loginMutation.isPending}
+                      disabled={loginMutation.isPending || loginState === "success"}
                     >
                       {loginMutation.isPending ? (
                         <>
@@ -151,6 +200,11 @@ export default function AuthPage() {
               </TabsContent>
 
               <TabsContent value="register">
+                <LoginStateVisualizer 
+                  state={registerState} 
+                  errorMessage={registerMutation.error?.message}
+                  className="mb-6"
+                />
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                     <FormField
@@ -164,6 +218,7 @@ export default function AuthPage() {
                               placeholder="Enter your full name" 
                               className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
                               {...field} 
+                              disabled={registerState === "loading" || registerState === "success"}
                             />
                           </FormControl>
                           <FormMessage className="text-red-500" />
@@ -183,6 +238,7 @@ export default function AuthPage() {
                               placeholder="Enter your email" 
                               className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
                               {...field} 
+                              disabled={registerState === "loading" || registerState === "success"}
                             />
                           </FormControl>
                           <FormMessage className="text-red-500" />
@@ -201,6 +257,7 @@ export default function AuthPage() {
                               placeholder="Choose a username" 
                               className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
                               {...field} 
+                              disabled={registerState === "loading" || registerState === "success"}
                             />
                           </FormControl>
                           <FormMessage className="text-red-500" />
@@ -220,6 +277,7 @@ export default function AuthPage() {
                               placeholder="Create a password (min. 8 characters)" 
                               className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus-visible:ring-primary/40 py-5"
                               {...field} 
+                              disabled={registerState === "loading" || registerState === "success"}
                             />
                           </FormControl>
                           <FormMessage className="text-red-500" />
@@ -230,7 +288,7 @@ export default function AuthPage() {
                     <Button
                       type="submit"
                       className="w-full mt-6 rounded-xl py-6 bg-primary hover:bg-primary/90 transition-all shadow-md hover:shadow-lg"
-                      disabled={registerMutation.isPending}
+                      disabled={registerMutation.isPending || registerState === "success"}
                     >
                       {registerMutation.isPending ? (
                         <>
