@@ -33,67 +33,67 @@
 
 @layer base {
   :root {
-    /* Dark theme base colors */
-    --background: 230 25% 8%;
-    --foreground: 230 15% 95%;
+    /* FinDXB-inspired dark theme base colors - more sophisticated */
+    --background: 220 25% 6%;
+    --foreground: 210 15% 98%;
     
-    /* Glass morphism cards with translucent effect */
-    --card: 230 30% 15%;
-    --card-foreground: 230 15% 95%;
+    /* Sleek glass morphism cards with subtle transparency */
+    --card: 220 28% 12%;
+    --card-foreground: 210 15% 98%;
     
-    --popover: 230 30% 15%;
-    --popover-foreground: 230 15% 95%;
+    --popover: 220 28% 12%;
+    --popover-foreground: 210 15% 98%;
     
-    /* Vibrant primary blue with purple undertones */
-    --primary: 230 96% 50%;
+    /* Cyan-blue primary inspired by FinDXB */
+    --primary: 204 100% 50%;
     --primary-foreground: 0 0% 100%;
     
-    /* Subtle secondary for contrast */
-    --secondary: 250 30% 20%;
+    /* Subtle teal secondary for elegant contrast */
+    --secondary: 186 60% 20%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Muted elements for less important info */
-    --muted: 230 25% 20%;
-    --muted-foreground: 230 20% 70%;
+    /* Refined muted elements for professional look */
+    --muted: 220 25% 18%;
+    --muted-foreground: 215 20% 75%;
     
-    /* Accent colors with energy */
-    --accent: 270 96% 65%;
-    --accent-foreground: 0 0% 100%;
+    /* Sophisticated accent colors */
+    --accent: 196 90% 70%;
+    --accent-foreground: 220 40% 10%;
     
-    /* Warning and alert colors */
+    /* Warning and alert colors - more refined */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     
-    /* UI elements */
-    --border: 230 25% 25%;
-    --input: 230 25% 18%;
-    --ring: 230 96% 50%;
+    /* UI elements with more finesse */
+    --border: 220 25% 22%;
+    --input: 220 25% 16%;
+    --ring: 204 100% 50%;
     
-    /* Increased border radius for modern look */
-    --radius: 1.2rem;
+    /* Larger border radius for modern premium feel */
+    --radius: 1.5rem;
     
-    /* Vibrant chart colors for data visualization */
-    --chart-1: 230 96% 50%;
-    --chart-2: 190 100% 65%;
-    --chart-3: 120 80% 60%;
-    --chart-4: 270 90% 70%;
-    --chart-5: 320 80% 65%;
+    /* Dubai-inspired gradients and chart colors */
+    --chart-1: 204 100% 50%;
+    --chart-2: 196 90% 60%;
+    --chart-3: 186 80% 55%;
+    --chart-4: 220 90% 65%;
+    --chart-5: 250 80% 60%;
     
-    /* Athletic-inspired sidebar */
-    --sidebar-background: 230 40% 12%;
+    /* Premium sidebar styling */
+    --sidebar-background: 220 35% 10%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 230 96% 50%;
+    --sidebar-primary: 204 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 96% 65%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 230 30% 20%;
-    --sidebar-ring: 230 96% 50%;
+    --sidebar-accent: 196 90% 70%;
+    --sidebar-accent-foreground: 220 40% 10%;
+    --sidebar-border: 220 30% 18%;
+    --sidebar-ring: 204 100% 50%;
     
-    /* Achievement colors for gamification */
-    --achievement-bronze: 30 80% 45%;
-    --achievement-silver: 220 20% 70%;
-    --achievement-gold: 45 90% 55%;
-    --achievement-platinum: 200 70% 80%;
+    /* Achievement colors with premium metallic feel */
+    --achievement-bronze: 30 85% 45%;
+    --achievement-silver: 220 25% 75%;
+    --achievement-gold: 45 95% 55%;
+    --achievement-platinum: 200 75% 85%;
   }
   
   * {
@@ -103,8 +103,9 @@
   body {
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30;
     background-image: 
-      radial-gradient(circle at top right, rgba(120, 80, 255, 0.15), transparent 40%),
-      radial-gradient(circle at bottom left, rgba(50, 80, 220, 0.1), transparent 40%);
+      linear-gradient(135deg, rgba(0, 180, 250, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at bottom right, rgba(0, 210, 255, 0.07), transparent 45%),
+      linear-gradient(to right, rgba(20, 30, 50, 0.5), rgba(0, 0, 40, 0.6));
     background-attachment: fixed;
   }
   
@@ -112,16 +113,30 @@
     @apply font-montserrat font-bold tracking-tight;
   }
   
-  /* Glass morphism effect for cards */
+  /* FinDXB-inspired glass morphism effect for cards */
   .glass-card {
-    @apply bg-card/80 backdrop-blur-md border border-white/10 shadow-lg;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.07);
+    @apply bg-card/70 backdrop-blur-lg border-0 shadow-xl relative overflow-hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   }
   
-  /* Premium styled stat cards */
+  /* Glass card border effect */
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03), rgba(0,0,0,0));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  /* Premium styled stat cards with Dubai skyline inspiration */
   .stat-card {
     @apply p-6 rounded-xl overflow-hidden relative glass-card;
-    background: linear-gradient(135deg, rgba(var(--card), 0.8), rgba(var(--card), 0.4));
+    background: linear-gradient(135deg, rgba(0, 30, 60, 0.8), rgba(0, 20, 40, 0.7));
   }
   
   /* Gradient borders for highlights */
@@ -159,14 +174,58 @@
     font-family: 'Open Sans', sans-serif;
   }
   
+  /* Typography inspired by FinDXB's premium feel */
+  .headline {
+    @apply text-4xl sm:text-5xl md:text-6xl font-montserrat font-bold tracking-tight leading-tight;
+    background: linear-gradient(90deg, #fff, #94c9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: text-shine 4s linear infinite;
+  }
+  
+  @keyframes text-shine {
+    to { background-position: 200% center; }
+  }
+  
   .quote {
     @apply font-montserrat font-light italic;
   }
   
-  /* Frost glass effect for premium card elements */
+  /* FinDXB-inspired premium glass effect */
   .frost-glass {
-    @apply bg-white/10 backdrop-blur-lg border border-white/20;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    @apply bg-black/25 backdrop-blur-xl border-0 relative overflow-hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  }
+  
+  .frost-glass::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  }
+  
+  /* Dubai-inspired button hover effect */
+  .dubai-hover {
+    @apply transition-all duration-300 relative overflow-hidden;
+  }
+  
+  .dubai-hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.7s ease;
+  }
+  
+  .dubai-hover:hover::before {
+    left: 100%;
   }
   
   /* Glow effects for highlighting interactive elements */
@@ -175,7 +234,7 @@
   }
   
   .glow-hover:hover {
-    box-shadow: 0 0 20px rgba(var(--primary), 0.6);
+    box-shadow: 0 0 20px rgba(0, 180, 255, 0.6);
     transform: translateY(-2px);
   }
   
