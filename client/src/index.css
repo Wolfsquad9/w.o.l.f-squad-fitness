@@ -217,4 +217,34 @@
   .btn-3d:active {
     box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.2);
   }
+
+  /* Wolf animation effects */
+  .wolf-teeth {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+  }
+  
+  .wolf-glow {
+    filter: drop-shadow(0 0 8px var(--primary));
+  }
+  
+  @keyframes growl {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.05); }
+    50% { transform: scale(0.95); }
+    75% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+  
+  .wolf-growl {
+    animation: growl 0.5s ease-in-out;
+  }
+  
+  @keyframes devoured {
+    0% { transform: scale(1) rotate(0); opacity: 1; }
+    100% { transform: scale(0) rotate(10deg); opacity: 0; }
+  }
+  
+  .devoured {
+    animation: devoured 0.8s ease-out forwards;
+  }
 }

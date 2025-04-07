@@ -7,7 +7,9 @@ import { z } from "zod";
 import { 
   insertWorkoutSchema, 
   insertApparelSchema, 
-  updatePrivacySettingsSchema 
+  updatePrivacySettingsSchema,
+  insertUserPreferencesSchema,
+  insertWorkoutRecommendationSchema
 } from "@shared/schema";
 import { WebSocketServer, WebSocket } from "ws";
 
@@ -365,6 +367,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     res.json(cleanLeaderboard);
+  });
+  
+  // Workout Recommendations endpoints
+  app.get("/api/workout-recommendations", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const userId = req.user!.id;
+    const recommendations = await storage.getWorkoutRecommendations(userId);
+    
+    res.json(recommendations);
+  });
+  
+  app.get("/api/workout-recommendations/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const id = parseInt(req.params.id);
+    const recommendation = await storage.getWorkoutRecommendation(id);
+    
+    if (!recommendation) {
+      return res.status(404).send("Workout recommendation not found");
+    }
+    
+    if (recommendation.userId !== req.user!.id) {
+      return res.status(403).send("Forbidden");
+    }
+    
+    res.json(recommendation);
+  });
+  
+  app.post("/api/workout-recommendations/generate", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const userId = req.user!.id;
+    
+    try {
+      const recommendation = await storage.generatePersonalizedRecommendation(userId);
+      res.status(201).json(recommendation);
+    } catch (error) {
+      return res.status(500).send("Error generating workout recommendation");
+    }
+  });
+  
+  app.post("/api/workout-recommendations/:id/complete", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const id = parseInt(req.params.id);
+    const recommendation = await storage.getWorkoutRecommendation(id);
+    
+    if (!recommendation) {
+      return res.status(404).send("Workout recommendation not found");
+    }
+    
+    if (recommendation.userId !== req.user!.id) {
+      return res.status(403).send("Forbidden");
+    }
+    
+    try {
+      const completedRecommendation = await storage.completeWorkoutRecommendation(id);
+      res.json(completedRecommendation);
+    } catch (error) {
+      return res.status(500).send("Error completing workout recommendation");
+    }
+  });
+  
+  app.get("/api/user/preferences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    const userId = req.user!.id;
+    const preferences = await storage.getUserPreferences(userId);
+    
+    if (!preferences) {
+      return res.status(404).send("No preferences found");
+    }
+    
+    res.json(preferences);
+  });
+  
+  app.post("/api/user/preferences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const userId = req.user!.id;
+      const preferencesData = insertUserPreferencesSchema.parse(req.body);
+      
+      const preferences = await storage.saveUserPreferences(userId, preferencesData);
+      res.status(201).json(preferences);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      return res.status(500).send("Internal server error");
+    }
+  });
+  
+  app.patch("/api/user/preferences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const userId = req.user!.id;
+      
+      const preferences = await storage.updateUserPreferences(userId, req.body);
+      
+      if (!preferences) {
+        return res.status(404).send("No preferences found");
+      }
+      
+      res.json(preferences);
+    } catch (error) {
+      return res.status(500).send("Error updating preferences");
+    }
   });
 
   const httpServer = createServer(app);

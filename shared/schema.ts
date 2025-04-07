@@ -147,3 +147,64 @@ export type Challenge = typeof challenges.$inferSelect;
 export type UserChallenge = typeof userChallenges.$inferSelect;
 export type IntegratedApp = typeof integratedApps.$inferSelect;
 export type PrivacySettings = z.infer<typeof updatePrivacySettingsSchema>;
+
+// Workout Recommendation schemas
+export const workoutTypes = [
+  "strength",
+  "cardio",
+  "flexibility",
+  "hiit",
+  "endurance",
+  "recovery",
+  "balance"
+] as const;
+
+export const fitnessGoals = [
+  "weight_loss",
+  "muscle_gain",
+  "endurance",
+  "flexibility",
+  "general_fitness",
+  "recovery",
+  "strength"
+] as const;
+
+export const userPreferencesSchema = z.object({
+  fitnessLevel: z.enum(["beginner", "intermediate", "advanced"]),
+  workoutPreference: z.enum(workoutTypes),
+  fitnessGoal: z.enum(fitnessGoals),
+  workoutDuration: z.number().min(5).max(120), // in minutes
+  workoutFrequency: z.number().min(1).max(7), // days per week
+  equipment: z.array(z.string()).optional(),
+  limitations: z.array(z.string()).optional()
+});
+
+export const workoutRecommendationSchema = z.object({
+  id: z.number().int(),
+  userId: z.number().int(),
+  title: z.string(),
+  description: z.string(),
+  type: z.enum(workoutTypes),
+  duration: z.number(), // in minutes
+  caloriesBurn: z.number(),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]),
+  exercises: z.array(z.object({
+    name: z.string(),
+    sets: z.number().optional(),
+    reps: z.number().optional(),
+    duration: z.number().optional(), // in seconds
+    restPeriod: z.number().optional(), // in seconds
+    instruction: z.string().optional()
+  })),
+  recommendedApparel: z.array(z.number().int()).optional(), // apparelIds
+  createdAt: z.date().optional(),
+  isCompleted: z.boolean().default(false)
+});
+
+export const insertUserPreferencesSchema = userPreferencesSchema;
+export const insertWorkoutRecommendationSchema = workoutRecommendationSchema.omit({ id: true, createdAt: true });
+
+export type UserPreferences = z.infer<typeof userPreferencesSchema>;
+export type WorkoutRecommendation = z.infer<typeof workoutRecommendationSchema>;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type InsertWorkoutRecommendation = z.infer<typeof insertWorkoutRecommendationSchema>;

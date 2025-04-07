@@ -4,7 +4,9 @@ import {
   type User, type InsertUser, type Apparel, type InsertApparel,
   type Workout, type InsertWorkout, type Achievement,
   type UserAchievement, type Challenge, type UserChallenge,
-  type IntegratedApp, type PrivacySettings
+  type IntegratedApp, type PrivacySettings,
+  type UserPreferences, type WorkoutRecommendation,
+  type InsertUserPreferences, type InsertWorkoutRecommendation
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -66,6 +68,16 @@ export interface IStorage {
   // Leaderboard operations
   getLeaderboard(limit?: number): Promise<User[]>;
   
+  // Workout recommendation operations
+  getUserPreferences(userId: number): Promise<UserPreferences | undefined>;
+  saveUserPreferences(userId: number, preferences: InsertUserPreferences): Promise<UserPreferences>;
+  updateUserPreferences(userId: number, preferences: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined>;
+  getWorkoutRecommendations(userId: number): Promise<WorkoutRecommendation[]>;
+  getWorkoutRecommendation(id: number): Promise<WorkoutRecommendation | undefined>;
+  createWorkoutRecommendation(recommendation: InsertWorkoutRecommendation): Promise<WorkoutRecommendation>;
+  completeWorkoutRecommendation(id: number): Promise<WorkoutRecommendation | undefined>;
+  generatePersonalizedRecommendation(userId: number): Promise<WorkoutRecommendation>;
+  
   // Session storage
   sessionStore: ReturnType<typeof createMemoryStore>;
 }
@@ -79,6 +91,8 @@ export class MemStorage implements IStorage {
   private challenges: Map<number, Challenge>;
   private userChallenges: Map<number, UserChallenge>;
   private integratedApps: Map<number, IntegratedApp>;
+  private userPreferences: Map<number, UserPreferences>;
+  private workoutRecommendations: Map<number, WorkoutRecommendation>;
   
   public sessionStore: ReturnType<typeof createMemoryStore>;
   
@@ -90,6 +104,7 @@ export class MemStorage implements IStorage {
   private currentChallengeId: number;
   private currentUserChallengeId: number;
   private currentIntegratedAppId: number;
+  private currentWorkoutRecommendationId: number;
   
   constructor() {
     this.users = new Map();
@@ -100,6 +115,8 @@ export class MemStorage implements IStorage {
     this.challenges = new Map();
     this.userChallenges = new Map();
     this.integratedApps = new Map();
+    this.userPreferences = new Map();
+    this.workoutRecommendations = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -113,6 +130,7 @@ export class MemStorage implements IStorage {
     this.currentChallengeId = 1;
     this.currentUserChallengeId = 1;
     this.currentIntegratedAppId = 1;
+    this.currentWorkoutRecommendationId = 1;
     
     // Initialize with default achievements
     this.initializeAchievements();
@@ -674,6 +692,223 @@ export class MemStorage implements IStorage {
       .filter(user => user.privacySettings?.showInLeaderboard !== false)
       .sort((a, b) => b.points - a.points)
       .slice(0, limit);
+  }
+  
+  // Workout recommendation methods
+  async getUserPreferences(userId: number): Promise<UserPreferences | undefined> {
+    return this.userPreferences.get(userId);
+  }
+  
+  async saveUserPreferences(userId: number, preferences: InsertUserPreferences): Promise<UserPreferences> {
+    this.userPreferences.set(userId, preferences);
+    return preferences;
+  }
+  
+  async updateUserPreferences(userId: number, preferences: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined> {
+    const existingPreferences = await this.getUserPreferences(userId);
+    if (!existingPreferences) return undefined;
+    
+    const updatedPreferences = {
+      ...existingPreferences,
+      ...preferences
+    };
+    
+    this.userPreferences.set(userId, updatedPreferences);
+    return updatedPreferences;
+  }
+  
+  async getWorkoutRecommendations(userId: number): Promise<WorkoutRecommendation[]> {
+    return Array.from(this.workoutRecommendations.values())
+      .filter(rec => rec.userId === userId)
+      .sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        }
+        return 0;
+      });
+  }
+  
+  async getWorkoutRecommendation(id: number): Promise<WorkoutRecommendation | undefined> {
+    return this.workoutRecommendations.get(id);
+  }
+  
+  async createWorkoutRecommendation(recommendation: InsertWorkoutRecommendation): Promise<WorkoutRecommendation> {
+    const id = this.currentWorkoutRecommendationId++;
+    const newRecommendation: WorkoutRecommendation = {
+      ...recommendation,
+      id,
+      createdAt: new Date()
+    };
+    
+    this.workoutRecommendations.set(id, newRecommendation);
+    return newRecommendation;
+  }
+  
+  async completeWorkoutRecommendation(id: number): Promise<WorkoutRecommendation | undefined> {
+    const recommendation = await this.getWorkoutRecommendation(id);
+    if (!recommendation) return undefined;
+    
+    const updatedRecommendation: WorkoutRecommendation = {
+      ...recommendation,
+      isCompleted: true
+    };
+    
+    this.workoutRecommendations.set(id, updatedRecommendation);
+    return updatedRecommendation;
+  }
+  
+  async generatePersonalizedRecommendation(userId: number): Promise<WorkoutRecommendation> {
+    // Get user preferences
+    const preferences = await this.getUserPreferences(userId);
+    
+    // If no preferences, generate some default recommendations
+    if (!preferences) {
+      return this.generateDefaultRecommendation(userId);
+    }
+    
+    // Get the user's apparel and workout history for more context
+    const userApparel = await this.getApparelByUserId(userId);
+    const recentWorkouts = await this.getWorkoutsByUserId(userId, 5);
+    
+    // Get the user's best performing apparel
+    const bestApparel = await this.getBestPerformingApparel(userId, 3);
+    const recommendedApparelIds = bestApparel.map(a => a.id);
+    
+    // Calculate workout difficulty based on fitness level
+    const difficultyMap: Record<string, "beginner" | "intermediate" | "advanced"> = {
+      "beginner": "beginner",
+      "intermediate": "intermediate", 
+      "advanced": "advanced"
+    };
+    
+    // Generate a workout based on user preferences
+    const title = `Custom ${preferences.workoutPreference.charAt(0).toUpperCase() + preferences.workoutPreference.slice(1)} Workout`;
+    
+    // Simple description logic based on fitness goal
+    let description: string;
+    switch (preferences.fitnessGoal) {
+      case "weight_loss":
+        description = "A high-intensity workout designed to maximize calorie burn and support your weight loss goals.";
+        break;
+      case "muscle_gain":
+        description = "A strength-focused workout to build muscle mass and increase overall power.";
+        break;
+      case "endurance":
+        description = "A sustained effort workout to improve your cardiovascular health and stamina.";
+        break;
+      case "flexibility":
+        description = "A mobility-focused session to improve your range of motion and reduce injury risk.";
+        break;
+      default:
+        description = "A balanced workout to improve your overall fitness and well-being.";
+    }
+    
+    // Calculate estimated calories based on workout type and duration
+    const calorieMultipliers: Record<string, number> = {
+      "strength": 8,
+      "cardio": 10,
+      "flexibility": 5,
+      "hiit": 12,
+      "endurance": 9,
+      "recovery": 4,
+      "balance": 6
+    };
+    
+    const caloriesBurn = Math.round(preferences.workoutDuration * calorieMultipliers[preferences.workoutPreference]);
+    
+    // Create a basic set of exercises based on workout type
+    let exercises: any[] = [];
+    
+    // Generate different exercises based on workout type
+    switch (preferences.workoutPreference) {
+      case "strength":
+        exercises = [
+          { name: "Barbell Squat", sets: 4, reps: 8, restPeriod: 90, instruction: "Keep your back straight and go as low as comfortable" },
+          { name: "Bench Press", sets: 4, reps: 10, restPeriod: 90, instruction: "Control the movement on the way down" },
+          { name: "Bent-over Row", sets: 3, reps: 12, restPeriod: 60, instruction: "Squeeze your shoulder blades together at the top" },
+          { name: "Shoulder Press", sets: 3, reps: 10, restPeriod: 60, instruction: "Don't arch your back" },
+          { name: "Romanian Deadlift", sets: 3, reps: 10, restPeriod: 90, instruction: "Hinge at your hips and keep your back straight" }
+        ];
+        break;
+      
+      case "cardio":
+        exercises = [
+          { name: "Warm-up Jog", duration: 300, instruction: "Easy pace to get your heart rate up" },
+          { name: "Interval Sprints", sets: 8, duration: 30, restPeriod: 60, instruction: "All-out effort during sprints" },
+          { name: "Steady State Run", duration: 900, instruction: "Maintain a conversational pace" },
+          { name: "Cool Down Walk", duration: 300, instruction: "Gradually reduce intensity" }
+        ];
+        break;
+      
+      case "flexibility":
+        exercises = [
+          { name: "Dynamic Leg Swings", duration: 120, instruction: "Controlled movement through full range of motion" },
+          { name: "Hip Flexor Stretch", duration: 60, sets: 2, instruction: "Hold stretch at point of tension, not pain" },
+          { name: "Downward Dog", duration: 60, sets: 3, instruction: "Push your heels toward the floor" },
+          { name: "Butterfly Stretch", duration: 60, sets: 2, instruction: "Allow knees to fall toward floor" },
+          { name: "World's Greatest Stretch", duration: 60, sets: 3, instruction: "Move slowly and with control" }
+        ];
+        break;
+      
+      case "hiit":
+        exercises = [
+          { name: "Jumping Jacks", duration: 30, restPeriod: 15, sets: 3, instruction: "Full range of motion" },
+          { name: "Mountain Climbers", duration: 30, restPeriod: 15, sets: 3, instruction: "Keep your hips down" },
+          { name: "Burpees", duration: 30, restPeriod: 15, sets: 3, instruction: "Explode up from the bottom position" },
+          { name: "High Knees", duration: 30, restPeriod: 15, sets: 3, instruction: "Pump your arms as you run" },
+          { name: "Plank Jacks", duration: 30, restPeriod: 15, sets: 3, instruction: "Maintain a straight line from head to heels" }
+        ];
+        break;
+      
+      default:
+        exercises = [
+          { name: "Push-ups", sets: 3, reps: 10, restPeriod: 60, instruction: "Keep your core tight" },
+          { name: "Bodyweight Squats", sets: 3, reps: 15, restPeriod: 60, instruction: "Knees tracking over toes" },
+          { name: "Plank", duration: 60, sets: 3, restPeriod: 60, instruction: "Don't let your hips sag" },
+          { name: "Jumping Jacks", duration: 60, sets: 3, restPeriod: 45, instruction: "Full range of motion" },
+          { name: "Mountain Climbers", duration: 60, sets: 3, restPeriod: 45, instruction: "Maintain a steady pace" }
+        ];
+    }
+    
+    // Create the recommendation
+    const recommendation: InsertWorkoutRecommendation = {
+      userId,
+      title,
+      description,
+      type: preferences.workoutPreference,
+      duration: preferences.workoutDuration,
+      caloriesBurn,
+      difficulty: difficultyMap[preferences.fitnessLevel],
+      exercises,
+      recommendedApparel: recommendedApparelIds,
+      isCompleted: false
+    };
+    
+    // Save and return the recommendation
+    return this.createWorkoutRecommendation(recommendation);
+  }
+  
+  private async generateDefaultRecommendation(userId: number): Promise<WorkoutRecommendation> {
+    // Create a default beginner-friendly workout
+    const recommendation: InsertWorkoutRecommendation = {
+      userId,
+      title: "Get Started Workout",
+      description: "A balanced workout perfect for beginners looking to build a fitness foundation.",
+      type: "strength",
+      duration: 30,
+      caloriesBurn: 200,
+      difficulty: "beginner",
+      exercises: [
+        { name: "Bodyweight Squats", sets: 3, reps: 12, restPeriod: 60, instruction: "Keep your weight in your heels" },
+        { name: "Push-ups (or Modified Push-ups)", sets: 3, reps: 8, restPeriod: 60, instruction: "Keep your core engaged" },
+        { name: "Walking Lunges", sets: 2, reps: 10, restPeriod: 60, instruction: "Take big steps and keep your front knee above your ankle" },
+        { name: "Plank", sets: 3, duration: 30, restPeriod: 60, instruction: "Keep your body in a straight line" },
+        { name: "Jumping Jacks", sets: 3, duration: 60, restPeriod: 45, instruction: "A classic cardio exercise to get your heart rate up" }
+      ],
+      isCompleted: false
+    };
+    
+    return this.createWorkoutRecommendation(recommendation);
   }
   
   // Helper methods
