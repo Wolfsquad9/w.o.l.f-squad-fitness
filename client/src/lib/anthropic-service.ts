@@ -12,6 +12,7 @@ const createAnthropicClient = () => {
   
   return new Anthropic({
     apiKey,
+    dangerouslyAllowBrowser: true, // Uniquement pour la démo - à remplacer par une approche serveur en production
   });
 };
 
