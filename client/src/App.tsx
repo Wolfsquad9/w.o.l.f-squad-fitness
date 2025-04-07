@@ -17,6 +17,7 @@ import ScanPage from "@/pages/scan-page";
 import ApparelDetailPage from "@/pages/apparel-detail-page";
 import WorkoutTrackerPage from "@/pages/workout-tracker-page";
 import LandingPage from "@/pages/landing-page";
+import DemoPage from "@/pages/demo-page";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
       <ProtectedRoute path="/scan" component={ScanPage} />
       <ProtectedRoute path="/workout" component={WorkoutTrackerPage} />
       <ProtectedRoute path="/apparel/:id" component={ApparelDetailPage} />
+      <ProtectedRoute path="/demo" component={DemoPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
