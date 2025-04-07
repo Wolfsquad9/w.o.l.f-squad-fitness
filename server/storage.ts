@@ -79,7 +79,7 @@ export interface IStorage {
   generatePersonalizedRecommendation(userId: number): Promise<WorkoutRecommendation>;
   
   // Session storage
-  sessionStore: ReturnType<typeof createMemoryStore>;
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -94,7 +94,7 @@ export class MemStorage implements IStorage {
   private userPreferences: Map<number, UserPreferences>;
   private workoutRecommendations: Map<number, WorkoutRecommendation>;
   
-  public sessionStore: ReturnType<typeof createMemoryStore>;
+  public sessionStore: session.Store;
   
   private currentUserId: number;
   private currentApparelId: number;
