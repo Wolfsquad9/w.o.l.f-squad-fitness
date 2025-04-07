@@ -16,11 +16,13 @@ import ProfilePage from "@/pages/profile-page";
 import ScanPage from "@/pages/scan-page";
 import ApparelDetailPage from "@/pages/apparel-detail-page";
 import WorkoutTrackerPage from "@/pages/workout-tracker-page";
+import LandingPage from "@/pages/landing-page";
 
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={DashboardPage} />
+      <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/dashboard" component={DashboardPage} />
       <ProtectedRoute path="/community" component={CommunityPage} />
       <ProtectedRoute path="/challenges" component={ChallengesPage} />
       <ProtectedRoute path="/integrations" component={IntegrationsPage} />
