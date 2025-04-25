@@ -1,10 +1,10 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import themePlugin from "@replit/vite-plugin-shadcn-theme-json";
-import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import themePlugin from '@replit/vite-plugin-shadcn-theme-json';
+import path from 'path';
+import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === 'production';
 const shouldUseCartographer = process.env.REPL_ID !== undefined && !isProduction;
 
 const plugins = [
@@ -13,30 +13,29 @@ const plugins = [
   themePlugin(),
   ...(shouldUseCartographer
     ? [
-        // Charger le plugin uniquement si nécessaire
-        require("@replit/vite-plugin-cartographer").cartographer(),
+        // Charge le plugin uniquement si nécessaire
+        require('@replit/vite-plugin-cartographer').cartographer(),
       ]
     : []),
 ];
 
-export default defineConfig({
+export const config = defineConfig({
   plugins,
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      '@': path.resolve(__dirname, 'client', 'src'),
+      '@shared': path.resolve(__dirname, 'shared'),
+      '@assets': path.resolve(__dirname, 'attached_assets'),
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
+  root: path.resolve(__dirname, 'client'),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(__dirname, 'dist', 'public'),
     emptyOutDir: true,
   },
-  base: "/",
+  base: '/',
 });
 
-,
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
