@@ -4,23 +4,18 @@ import themePlugin from '@replit/vite-plugin-shadcn-theme-json';
 import path from 'path';
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-const isProduction = process.env.NODE_ENV === 'production';
-const shouldUseCartographer = process.env.REPL_ID !== undefined && !isProduction;
-
-const plugins = [
-  react(),
-  runtimeErrorOverlay(),
-  themePlugin(),
-  ...(shouldUseCartographer
-    ? [
-        // Charge le plugin uniquement si nécessaire
-        require('@replit/vite-plugin-cartographer').cartographer(),
-      ]
-    : []),
-];
-
 export const config = defineConfig({
-  plugins,
+  plugins: [
+    react(),
+    runtimeErrorOverlay(),
+    themePlugin(),
+    ...(process.env.NODE_ENV !== 'production' &&
+    process.env.REPL_ID !== undefined
+      ? [
+          require('@replit/vite-plugin-cartographer').cartographer(),
+        ]
+      : []),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'client', 'src'),
