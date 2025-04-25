@@ -4,7 +4,7 @@ import themePlugin from '@replit/vite-plugin-shadcn-theme-json';
 import path from 'path';
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-export const config = defineConfig({
+export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
